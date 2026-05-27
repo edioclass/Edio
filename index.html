@@ -426,25 +426,37 @@
         renderPlaylist(filtered);
     });
 
-    // Audio Playback Pipeline
-    function initPlayback(index) {
-        if(index < 0 || index >= masterPlaylist.length) return;
-        currentTrackIndex = index;
-        const track = masterPlaylist[currentTrackIndex];
+// Audio Playback Pipeline (Updated with MAUI Communication Layer)
+function initPlayback(index) {
+    if(index < 0 || index >= masterPlaylist.length) return;
+    currentTrackIndex = index;
+    const track = masterPlaylist[currentTrackIndex];
 
-        // UI Update Player Deck Info
-        document.getElementById('pImg').src = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
-        document.getElementById('pTitle').innerText = track.title;
-        document.getElementById('pMeta').innerText = `${track.subject} • ${track.teacher}`;
-        
-        // Add Active class for smooth slide-up animation
-        playerDeck.classList.add('active');
+    // UI Update Player Deck Info
+    document.getElementById('pImg').src = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
+    document.getElementById('pTitle').innerText = track.title;
+    document.getElementById('pMeta').innerText = `${track.subject} • ${track.teacher}`;
+    
+    playerDeck.classList.add('active');
 
-        // Engine Setup Direct Network Stream
-        audioEngine.src = track.audio;
-        audioEngine.play();
-        btnPlay.innerText = "⏸";
+    // Engine Setup Direct Network Stream
+    audioEngine.src = track.audio;
+    audioEngine.play();
+    btnPlay.innerText = "⏸";
+
+    // ↓↓↓ MAUI LAYER KO AKHBAAR BHEJNA (Title, Meta updates) ↓↓↓
+    if (window.chrome && window.chrome.webview) {
+        // Safe check for desktop/hybrid standard framework
     }
+    
+    // Hamara native call loop
+    try {
+        let metaString = `${track.subject} - Prof. ${track.teacher}`;
+        // Android Hybrid Bridge structure trigger
+        let msg = JSON.stringify({ title: track.title, meta: metaString, duration: audioEngine.duration ? audioEngine.duration * 1000 : 0 });
+        window.location.href = "jsbridge://update_meta?data=" + encodeURIComponent(msg);
+    } catch(e) { }
+}
 
     // ↓↓↓ GLOBAL WINDOW FUNCTIONS FOR MAUI LINKUP ↓↓↓
     window.nativePlayPause = function() {
