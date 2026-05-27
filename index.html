@@ -356,150 +356,162 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://opensheet.elk.sh/1lKD4-800JJl8TJ_3mUnb7jBjbRwm_HoqdFCEK2u1rO0/playlist";
-        let masterPlaylist = [];
-        let currentTrackIndex = -1;
-        const audioEngine = new Audio();
+   <script>
+    const API_URL = "https://opensheet.elk.sh/1lKD4-800JJl8TJ_3mUnb7jBjbRwm_HoqdFCEK2u1rO0/playlist";
+    let masterPlaylist = [];
+    let currentTrackIndex = -1;
+    const audioEngine = new Audio();
 
-        // DOM Element Mapping
-        const playlistWrapper = document.getElementById('playlistWrapper');
-        const loadingView = document.getElementById('loading');
-        const searchField = document.getElementById('searchField');
-        const playerDeck = document.getElementById('playerDeck');
-        const btnPlay = document.getElementById('btnPlay');
-        const btnNext = document.getElementById('btnNext');
-        const btnPrev = document.getElementById('btnPrev');
-        const trackScrubber = document.getElementById('trackScrubber');
-        const timeCurrent = document.getElementById('timeCurrent');
-        const timeTotal = document.getElementById('timeTotal');
+    // DOM Element Mapping
+    const playlistWrapper = document.getElementById('playlistWrapper');
+    const loadingView = document.getElementById('loading');
+    const searchField = document.getElementById('searchField');
+    const playerDeck = document.getElementById('playerDeck');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnNext = document.getElementById('btnNext');
+    const btnPrev = document.getElementById('btnPrev');
+    const trackScrubber = document.getElementById('trackScrubber');
+    const timeCurrent = document.getElementById('timeCurrent');
+    const timeTotal = document.getElementById('timeTotal');
 
-        // Fetch Data from Google Sheet
-        async function fetchPlaylist() {
-            try {
-                const response = await fetch(API_URL);
-                masterPlaylist = await response.json();
-                loadingView.style.display = 'none';
-                renderPlaylist(masterPlaylist);
-            } catch (error) {
-                loadingView.innerText = "Failed to load database. Check Internet connection.";
-            }
+    // Fetch Data from Google Sheet
+    async function fetchPlaylist() {
+        try {
+            const response = await fetch(API_URL);
+            masterPlaylist = await response.json();
+            loadingView.style.display = 'none';
+            renderPlaylist(masterPlaylist);
+        } catch (error) {
+            loadingView.innerText = "Failed to load database. Check Internet connection.";
+        }
+    }
+
+    function renderPlaylist(tracks) {
+        playlistWrapper.innerHTML = "";
+        if(tracks.length === 0) {
+            playlistWrapper.innerHTML = `<div class="loading-shimmer">No lectures found.</div>`;
+            return;
         }
 
-        function renderPlaylist(tracks) {
-            playlistWrapper.innerHTML = "";
-            if(tracks.length === 0) {
-                playlistWrapper.innerHTML = `<div class="loading-shimmer">No lectures found.</div>`;
-                return;
-            }
-
-            tracks.forEach((track) => {
-                const realIndex = masterPlaylist.findIndex(t => t.id === track.id);
-                
-                const card = document.createElement('div');
-                card.className = "track-card";
-                card.onclick = () => initPlayback(realIndex);
-
-                const fallbackImg = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
-
-                card.innerHTML = `
-                    <img src="${fallbackImg}" class="track-img" alt="course thumbnail">
-                    <div class="track-info">
-                        <span class="track-course">${track.course} • ${track.subject}</span>
-                        <span class="track-title">${track.title}</span>
-                        <span class="track-meta">Prof. ${track.teacher} | ⏱ ${track.duration}</span>
-                    </div>
-                `;
-                playlistWrapper.appendChild(card);
-            });
-        }
-
-        // Search Filter System Logic
-        searchField.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            const filtered = masterPlaylist.filter(t => 
-                t.title.toLowerCase().includes(query) ||
-                t.course.toLowerCase().includes(query) ||
-                t.subject.toLowerCase().includes(query) ||
-                t.teacher.toLowerCase().includes(query)
-            );
-            renderPlaylist(filtered);
-        });
-
-        // Audio Playback Pipeline
-        function initPlayback(index) {
-            if(index < 0 || index >= masterPlaylist.length) return;
-            currentTrackIndex = index;
-            const track = masterPlaylist[currentTrackIndex];
-
-            // UI Update Player Deck Info
-            document.getElementById('pImg').src = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
-            document.getElementById('pTitle').innerText = track.title;
-            document.getElementById('pMeta').innerText = `${track.subject} • ${track.teacher}`;
+        tracks.forEach((track) => {
+            const realIndex = masterPlaylist.findIndex(t => t.id === track.id);
             
-            // Add Active class for smooth slide-up animation
-            playerDeck.classList.add('active');
+            const card = document.createElement('div');
+            card.className = "track-card";
+            card.onclick = () => initPlayback(realIndex);
 
-            // Engine Setup Direct Network Stream
-            audioEngine.src = track.audio;
+            const fallbackImg = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
+
+            card.innerHTML = `
+                <img src="${fallbackImg}" class="track-img" alt="course thumbnail">
+                <div class="track-info">
+                    <span class="track-course">${track.course} • ${track.subject}</span>
+                    <span class="track-title">${track.title}</span>
+                    <span class="track-meta">Prof. ${track.teacher} | ⏱ ${track.duration}</span>
+                </div>
+            `;
+            playlistWrapper.appendChild(card);
+        });
+    }
+
+    // Search Filter System Logic
+    searchField.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = masterPlaylist.filter(t => 
+            t.title.toLowerCase().includes(query) ||
+            t.course.toLowerCase().includes(query) ||
+            t.subject.toLowerCase().includes(query) ||
+            t.teacher.toLowerCase().includes(query)
+        );
+        renderPlaylist(filtered);
+    });
+
+    // Audio Playback Pipeline
+    function initPlayback(index) {
+        if(index < 0 || index >= masterPlaylist.length) return;
+        currentTrackIndex = index;
+        const track = masterPlaylist[currentTrackIndex];
+
+        // UI Update Player Deck Info
+        document.getElementById('pImg').src = track.image ? track.image : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150';
+        document.getElementById('pTitle').innerText = track.title;
+        document.getElementById('pMeta').innerText = `${track.subject} • ${track.teacher}`;
+        
+        // Add Active class for smooth slide-up animation
+        playerDeck.classList.add('active');
+
+        // Engine Setup Direct Network Stream
+        audioEngine.src = track.audio;
+        audioEngine.play();
+        btnPlay.innerText = "⏸";
+    }
+
+    // ↓↓↓ GLOBAL WINDOW FUNCTIONS FOR MAUI LINKUP ↓↓↓
+    window.nativePlayPause = function() {
+        if(audioEngine.paused) {
             audioEngine.play();
             btnPlay.innerText = "⏸";
+        } else {
+            audioEngine.pause();
+            btnPlay.innerText = "▶";
         }
+    };
 
-        // Media Event Control Listeners
-        btnPlay.addEventListener('click', () => {
-            if(audioEngine.paused) {
-                audioEngine.play();
-                btnPlay.innerText = "⏸";
-            } else {
-                audioEngine.pause();
-                btnPlay.innerText = "▶";
-            }
-        });
+    window.nativeNext = function() {
+        btnNext.click();
+    };
 
-        btnNext.addEventListener('click', () => {
-            if(currentTrackIndex < masterPlaylist.length - 1) {
-                initPlayback(currentTrackIndex + 1);
-            } else {
-                initPlayback(0); // Loop back to start
-            }
-        });
+    window.nativePrev = function() {
+        btnPrev.click();
+    };
 
-        btnPrev.addEventListener('click', () => {
-            if(currentTrackIndex > 0) {
-                initPlayback(currentTrackIndex - 1);
-            }
-        });
+    // Media Event Control Listeners
+    btnPlay.addEventListener('click', () => {
+        window.nativePlayPause();
+    });
 
-        // Time Tracker & Slider Sync
-        audioEngine.addEventListener('timeupdate', () => {
-            if(isNaN(audioEngine.duration)) return;
-            const progress = (audioEngine.currentTime / audioEngine.duration) * 100;
-            trackScrubber.value = progress;
-
-            // Format Timing Dashboard Display
-            timeCurrent.innerText = formatTime(audioEngine.currentTime);
-            timeTotal.innerText = formatTime(audioEngine.duration);
-        });
-
-        trackScrubber.addEventListener('input', (e) => {
-            if(!audioEngine.duration) return;
-            const targetTime = (e.target.value / 100) * audioEngine.duration;
-            audioEngine.currentTime = targetTime;
-        });
-
-        audioEngine.addEventListener('ended', () => {
-            btnNext.click(); // Autoplay system cascade next trigger
-        });
-
-        function formatTime(secs) {
-            const m = Math.floor(secs / 60).toString().padStart(2, '0');
-            const s = Math.floor(secs % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
+    btnNext.addEventListener('click', () => {
+        if(currentTrackIndex < masterPlaylist.length - 1) {
+            initPlayback(currentTrackIndex + 1);
+        } else {
+            initPlayback(0); // Loop back to start
         }
+    });
 
-        // Runtime Boot Lifecycle Initialization
-        fetchPlaylist();
-    </script>
-</body>
+    btnPrev.addEventListener('click', () => {
+        if(currentTrackIndex > 0) {
+            initPlayback(currentTrackIndex - 1);
+        }
+    });
+
+    // Time Tracker & Slider Sync
+    audioEngine.addEventListener('timeupdate', () => {
+        if(isNaN(audioEngine.duration)) return;
+        const progress = (audioEngine.currentTime / audioEngine.duration) * 100;
+        trackScrubber.value = progress;
+
+        // Format Timing Dashboard Display
+        timeCurrent.innerText = formatTime(audioEngine.currentTime);
+        timeTotal.innerText = formatTime(audioEngine.duration);
+    });
+
+    trackScrubber.addEventListener('input', (e) => {
+        if(!audioEngine.duration) return;
+        const targetTime = (e.target.value / 100) * audioEngine.duration;
+        audioEngine.currentTime = targetTime;
+    });
+
+    audioEngine.addEventListener('ended', () => {
+        btnNext.click(); // Autoplay system cascade next trigger
+    });
+
+    function formatTime(secs) {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    // Runtime Boot Lifecycle Initialization
+    fetchPlaylist();
+</script></body>
 </html>
